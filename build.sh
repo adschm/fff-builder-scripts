@@ -23,7 +23,7 @@ buildone() {
         ./buildscript build 2> "$logfile" > "$logfile"
 	
 	mkdir -p $fwfilebase/targets
-	mv bin/* $fwfilebase/targets/
+	mv bin/* $fwfilebase/targets/$vrnt-$bsp
 	mkdir -p $fwfilebase/packages/$vrnt-$bsp
 	mv build/bin/packages/* $fwfilebase/packages/$vrnt-$bsp/
 }
