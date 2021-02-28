@@ -7,6 +7,7 @@ bindir="/data/fwbin"
 giturl="https://git.freifunk-franken.de/freifunk-franken/firmware.git"
 lockfile="/data/fffbuilder/fffbuilder.lock"
 nukebuild=0
+noprepare=1
 force=1
 
 bspnode="ath79-generic ath79-tiny ar71xx-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
@@ -71,7 +72,11 @@ echo "-> Select node and prepare..."
 ./buildscript selectvariant node
 # prepare won't work without having bsp set
 ./buildscript selectbsp bsp/ath79-generic.bsp
-./buildscript prepare > "$logfilebase/prepare.out" 2> "$logfilebase/prepare.out"
+if [ "$noprepare" = "1" ]; then
+	echo "prepare skipped" > "$logfilebase/prepare.out"
+else
+	./buildscript prepare > "$logfilebase/prepare.out" 2> "$logfilebase/prepare.out"
+fi
 
 for b in $bspnode; do
 	buildone node "$b"
