@@ -5,6 +5,9 @@ chkout="master"
 blddir="/data/build"
 bindir="/data/fwbin"
 giturl="https://git.freifunk-franken.de/freifunk-franken/firmware.git"
+lockfile="/data/fffbuilder/fffbuilder.lock"
+nukebuild=0
+force=1
 
 bspnode="ath79-generic ath79-tiny ar71xx-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
 bsplayer3="ath79-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
@@ -16,43 +19,59 @@ buildone() {
 	echo "-> Build $vrnt $bsp ..."
         ./buildscript selectbsp "bsp/${bsp}.bsp"
 
-	local logfile=$bindir/$remotehash/logs/$vrnt-$bsp.stdout
-	mkdir -p $bindir/$remotehash/logs/
+	local logfile=$logfilebase/build-$vrnt-$bsp.out
         ./buildscript build 2> "$logfile" > "$logfile"
 	
-	mkdir -p $bindir/$remotehash/targets
-	mv bin/* $bindir/$remotehash/targets/
-	mkdir -p $bindir/$remotehash/packages/$vrnt-$bsp
-	mv build/bin/packages/* $bindir/$remotehash/packages/$vrnt-$bsp/
+	mkdir -p $fwfilebase/targets
+	mv bin/* $fwfilebase/targets/
+	mkdir -p $fwfilebase/packages/$vrnt-$bsp
+	mv build/bin/packages/* $fwfilebase/packages/$vrnt-$bsp/
 }
 
 if [ -d "$blddir" ]; then
 	cd "$blddir"
-	localhash=$(git rev-parse "$chkout")
+	localhash=$(git rev-parse HEAD)
 	cd ..
 fi
 remotehash=$(git ls-remote "$giturl" "$chkout" | awk '{print $1}')
-if [ "$localhash" = "$remotehash" ] && [ "$1" != "-f" ]; then
-	echo "Hash has not changed. Exiting."
-	exit 0
+if [ "$localhash" = "$remotehash" ]; then
+	if [ "$force" = "1" ]; then
+		echo "Hash has not changed. Continuation forced..."
+	else
+		echo "Hash has not changed. Exiting."
+		exit 0
+	fi
 fi
 
-# Do something
-echo "-> Remove old build directory..."
-rm -rf "$blddir"
+if [ -f "$lockfile" ]; then
+	echo "Script is already running."
+	exit 0
+fi
+touch "$lockfile"
 
-echo "-> Clone Git repo..."
-sleep 1
-git clone "$giturl" "$blddir"
-sleep 1
+# Do something
+if [ "$nukebuild" = "1" ]; then
+	echo "-> Remove old build directory..."
+	rm -rf "$blddir"
+
+	echo "-> Clone Git repo..."
+	sleep 1
+	git clone "$giturl" "$blddir"
+fi
+
 cd "$blddir"
 git checkout "$chkout"
+
+shorthash=$(git rev-parse HEAD | cut -c 1-12)
+fwfilebase="$bindir/$(date "+%Y-%m-%d_%H-%M")_$shorthash"
+logfilebase=$fwfilebase/logs
+mkdir -p "$logfilebase"
 
 echo "-> Select node and prepare..."
 ./buildscript selectvariant node
 # prepare won't work without having bsp set
 ./buildscript selectbsp bsp/ath79-generic.bsp
-./buildscript prepare
+./buildscript prepare > "$logfilebase/prepare.out" 2> "$logfilebase/prepare.out"
 
 for b in $bspnode; do
 	buildone node "$b"
@@ -65,3 +84,4 @@ for b in $bsplayer3; do
         buildone layer3 "$b"
 done
 
+rm "$lockfile"
