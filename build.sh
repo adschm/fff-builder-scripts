@@ -22,7 +22,7 @@ buildone() {
         ./buildscript selectbsp "bsp/${bsp}.bsp"
 
 	local logfile=$logfilebase/build-$vrnt-$bsp.out
-        ./buildscript build 2> "$logfile" > "$logfile"
+        ./buildscript build > "$logfile" 2>&1
 	
 	mkdir -p $fwfilebase/targets
 	mv bin/* $fwfilebase/targets/$vrnt-$bsp
@@ -78,7 +78,7 @@ echo "-> Select node and prepare..."
 if [ "$noprepare" = "1" ]; then
 	echo "prepare skipped" > "$logfilebase/prepare.out"
 else
-	./buildscript prepare > "$logfilebase/prepare.out" 2> "$logfilebase/prepare.out"
+	./buildscript prepare > "$logfilebase/prepare.out" 2>&1
 fi
 
 for b in $bspnode; do
