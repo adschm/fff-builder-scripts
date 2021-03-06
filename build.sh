@@ -1,18 +1,18 @@
 #!/bin/sh
 
 ncpu=2
-chkout="master"
 blddir="/data/build"
 bindir="/data/fwbin"
-giturl="https://git.freifunk-franken.de/freifunk-franken/firmware.git"
 lockfile="/data/fffbuilder/fffbuilder.lock"
 hashfile="/data/fffbuilder/used.hashes"
 nukebuild=1 # delete entire build directory
 noprepare=0 # do not run ./buildscript prepare
 force=0 # overwrite hash check
 
-bspnode="ath79-generic ath79-tiny ar71xx-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
-bsplayer3="ath79-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
+bspnodeoff="ath79-generic ath79-tiny ar71xx-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
+bsplayer3off="ath79-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
+bspnodeadsc="ath79 ath79-tiny ar71xx ipq40xx ipq806x mpc85xx mt76x8 mt7621"
+bsplayer3adsc="ath79 ipq40xx ipq806x mpc85xx mt76x8 mt7621"
 
 buildone() {
 	local vrnt=$1
@@ -30,11 +30,27 @@ buildone() {
 	mv build/bin/packages/* $fwfilebase/packages/$vrnt-$bsp/
 }
 
-if [ -d "$blddir" ]; then
-	cd "$blddir"
-	localhash=$(git rev-parse HEAD)
-	cd ..
-fi
+repo="$1"
+chkout="$2"
+
+case "$repo" in
+	official)
+		giturl="https://git.freifunk-franken.de/freifunk-franken/firmware.git"
+		[ -n "$chkout" ] || chkout=master
+		bspnode="$bspnodeoff"
+		bsplayer3="$bsplayer3off"
+		;;
+	staging)
+		giturl="https://git.freifunk-franken.de/adschm/firmware.git"
+		[ -n "$chkout" ] || chkout=staging
+		bspnode="$bspnodeoff"
+		bsplayer3="$bsplayer3off"
+		;;
+	*)
+		echo "No valid firmware identifier given. Exiting."
+		exit 0
+esac
+
 remotehash=$(git ls-remote "$giturl" "$chkout" | awk '{print $1}')
 if grep -q "$remotehash" "$hashfile"; then
 	if [ "$force" = "1" ]; then
@@ -67,7 +83,7 @@ cd "$blddir"
 git checkout "$chkout"
 
 shorthash=$(git rev-parse HEAD | cut -c 1-12)
-fwfilebase="$bindir/$(date "+%Y-%m-%d_%H-%M")_$shorthash"
+fwfilebase="$bindir/$(date "+%Y-%m-%d_%H%M")_${repo}_$shorthash"
 logfilebase=$fwfilebase/logs
 mkdir -p "$logfilebase"
 
