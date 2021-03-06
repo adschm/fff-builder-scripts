@@ -6,9 +6,10 @@ blddir="/data/build"
 bindir="/data/fwbin"
 giturl="https://git.freifunk-franken.de/freifunk-franken/firmware.git"
 lockfile="/data/fffbuilder/fffbuilder.lock"
-nukebuild=0
-noprepare=1
-force=1
+hashfile="/data/fffbuilder/used.hashes"
+nukebuild=1 # delete entire build directory
+noprepare=0 # do not run ./buildscript prepare
+force=0 # overwrite hash check
 
 bspnode="ath79-generic ath79-tiny ar71xx-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
 bsplayer3="ath79-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
@@ -35,11 +36,11 @@ if [ -d "$blddir" ]; then
 	cd ..
 fi
 remotehash=$(git ls-remote "$giturl" "$chkout" | awk '{print $1}')
-if [ "$localhash" = "$remotehash" ]; then
+if grep -q "$remotehash" "$hashfile"; then
 	if [ "$force" = "1" ]; then
-		echo "Hash has not changed. Continuation forced..."
+		echo "Hash has already been built. Continuation forced..."
 	else
-		echo "Hash has not changed. Exiting."
+		echo "Hash has already been built. Exiting."
 		exit 0
 	fi
 fi
@@ -49,6 +50,8 @@ if [ -f "$lockfile" ]; then
 	exit 0
 fi
 touch "$lockfile"
+
+echo "$remotehash" >> "$hashfile"
 
 # Do something
 if [ "$nukebuild" = "1" ]; then
