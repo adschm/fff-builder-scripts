@@ -10,8 +10,8 @@ nukebuild=1 # delete entire build directory
 noprepare=0 # do not run ./buildscript prepare
 force=0 # overwrite hash check
 
-bspnodeoff="ath79-generic ath79-tiny ar71xx-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
-bsplayer3off="ath79-generic ipq806x-generic mpc85xx-generic ramips-mt76x8 ramips-mt7621"
+bspnodeoff="ath79-generic ath79-tiny ipq806x-generic mpc85xx-p1010 ramips-mt76x8 ramips-mt7621"
+bsplayer3off="ath79-generic ipq806x-generic mpc85xx-p1010 ramips-mt76x8 ramips-mt7621"
 bspnodeadsc="ath79 ath79-tiny ar71xx ipq40xx ipq806x mpc85xx mt76x8 mt7621"
 bsplayer3adsc="ath79 ipq40xx ipq806x mpc85xx mt76x8 mt7621"
 
