@@ -3,8 +3,9 @@
 ncpu=2
 blddir="/data/build"
 bindir="/data/fwbin"
-lockfile="/data/fffbuilder/fffbuilder.lock"
-hashfile="/data/fffbuilder/used.hashes"
+scriptdir="/data/fff-builder"
+lockfile="$scriptdir/fffbuilder.lock"
+hashfile="$scriptdir/used.hashes"
 nukebuild=1 # delete entire build directory
 noprepare=0 # do not run ./buildscript prepare
 force=0 # overwrite hash check
