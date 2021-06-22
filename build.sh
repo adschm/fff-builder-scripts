@@ -18,17 +18,28 @@ bsplayer3adsc="ath79 ipq40xx ipq806x mpc85xx mt76x8 mt7621"
 buildone() {
 	local vrnt=$1
 	local bsp=$2
+	local bsppath="bsp/${bsp}.bsp"
+	local logfile="$logfilebase/build-$vrnt-$bsp.out"
 
 	echo "-> Build $vrnt $bsp ..."
-        ./buildscript selectbsp "bsp/${bsp}.bsp"
+        ./buildscript selectbsp "$bsppath"
 
-	local logfile=$logfilebase/build-$vrnt-$bsp.out
+	sleep 1
+
+	# skip if bsp has not been updated
+	if [ -z "$bsppath" ] || [ $(readlink -q selected_bsp) != "$bsppath" ]; then
+		echo "Error: $bsppath not set."
+		return 1
+	fi
+
         ./buildscript build > "$logfile" 2>&1
 	
 	mkdir -p $fwfilebase/targets
 	mv bin/* $fwfilebase/targets/$vrnt-$bsp
 	mkdir -p $fwfilebase/packages/$vrnt-$bsp
 	mv build/bin/packages/* $fwfilebase/packages/$vrnt-$bsp/
+
+	return 0
 }
 
 repo="$1"
